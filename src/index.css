@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  [data-theme="dark"] {
+    color-scheme: dark;
+    --color-background: 8 20 38;
+    --color-surface: 17 30 53;
+    --color-surface-hover: 24 41 70;
+    --color-text: 226 232 240;
+    --color-subtle: 148 163 184;
+    --color-strong: 248 250 252;
+    --color-primary: 13 148 136;
+    --color-primary-hover: 15 118 110;
+    --color-accent: 163 230 53;
+    --color-accent-hover: 132 204 22;
+    --color-on-accent: 8 20 38;
+  }
+
+  [data-theme="light"] {
+    color-scheme: light;
+    --color-background: 248 250 252;
+    --color-surface: 255 255 255;
+    --color-surface-hover: 241 245 249;
+    --color-text: 15 23 42;
+    --color-subtle: 71 85 105;
+    --color-strong: 15 23 42;
+    --color-primary: 15 118 110;
+    --color-primary-hover: 17 94 89;
+    --color-accent: 77 124 15;
+    --color-accent-hover: 63 98 18;
+    --color-on-accent: 255 255 255;
+  }
+
+  body {
+    @apply bg-dark-background text-dark-text font-sans antialiased overflow-x-hidden;
+    /* Fundo profundo com granularidade sutil */
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(13, 148, 136, 0.08), transparent 25%), 
+      radial-gradient(circle at 85% 30%, rgba(163, 230, 53, 0.05), transparent 25%);
+    background-attachment: fixed;
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+
+  /* Scrollbar Personalizada */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-background;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-dark-surface rounded-full border-2 border-dark-background;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/50;
+  }
+}
+
+/* Utilitários de Animação */
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .text-shadow-lg {
+    text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  }
+  .text-glow {
+    text-shadow: 0 0 10px rgba(163, 230, 53, 0.5);
+  }
+}
