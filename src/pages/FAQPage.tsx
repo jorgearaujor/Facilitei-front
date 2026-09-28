@@ -27,18 +27,18 @@ export function FAQPage() {
             100% do valor vá para quem trabalhou.
           </p>
         </AccordionItem>
-        <AccordionItem title="Os profissionais são verificados?">
+        <AccordionItem title="Como escolher um profissional?">
           <p>
-            Sim! Realizamos uma verificação de antecedentes e documentos de
-            todos os profissionais cadastrados para garantir a segurança da
-            comunidade.
+            Consulte as especialidades, o portfólio e as avaliações publicadas
+            por clientes. O Facilitei ainda não realiza checagem de antecedentes
+            ou validação documental dos profissionais.
           </p>
         </AccordionItem>
         <AccordionItem title="E se o serviço não for concluído?">
           <p>
-            Você pode reportar o problema através do nosso suporte. Temos uma
-            equipe pronta para mediar conflitos e garantir que ninguém saia no
-            prejuízo.
+            Use o chat para registrar o combinado e tentar resolver diretamente
+            com o profissional. Neste momento o Facilitei não intermedeia
+            pagamentos nem possui mediação formal de conflitos.
           </p>
         </AccordionItem>
         <AccordionItem title="Como cancelo um serviço?">

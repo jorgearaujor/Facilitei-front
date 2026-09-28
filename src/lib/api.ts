@@ -14,12 +14,21 @@ export const api = axios.create({
 
 let csrfRequest: Promise<void> | null = null;
 
+export const isOptionalAuthEndpointUnavailable = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error)) return false;
+  return [404, 405, 500].includes(error.response?.status || 0);
+};
+
 export const ensureCsrfToken = (): Promise<void> => {
   if (!csrfRequest) {
-    csrfRequest = api.get('/auth/csrf').then(() => undefined).catch((error) => {
-      csrfRequest = null;
-      throw error;
-    });
+    const request = api
+      .get('/auth/csrf')
+      .then(() => undefined)
+      .catch((error) => {
+        csrfRequest = null;
+        throw error;
+      });
+    csrfRequest = request;
   }
   return csrfRequest;
 };
@@ -39,16 +48,16 @@ api.interceptors.response.use(
 );
 
 // Helpers para requisições mais limpas nos componentes
-export const get = <T>(url: string, params?: any) => 
+export const get = <T>(url: string, params?: Record<string, unknown>) =>
   api.get<T>(url, { params }).then(res => res.data);
 
-export const post = <T>(url: string, body: any) => 
+export const post = <T>(url: string, body: unknown) =>
   api.post<T>(url, body).then(res => res.data);
 
-export const put = <T>(url: string, body: any) => 
+export const put = <T>(url: string, body: unknown) =>
   api.put<T>(url, body).then(res => res.data);
 
-export const patch = <T>(url: string, body: any) => 
+export const patch = <T>(url: string, body: unknown) =>
   api.patch<T>(url, body).then(res => res.data);
 
 export const del = <T>(url: string) => 

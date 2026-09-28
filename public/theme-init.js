@@ -15,6 +15,6 @@
   document.documentElement.dataset.theme = theme;
   document.querySelector('meta[name="theme-color"]')?.setAttribute(
     "content",
-    theme === "light" ? "#F8FAFC" : "#081426",
+    theme === "light" ? "#F7F4EC" : "#0D1D1A",
   );
 })();

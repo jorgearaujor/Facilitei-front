@@ -1,5 +1,9 @@
 import { useState, useMemo } from "react"; // Importar useMemo
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { Card } from "../components/ui/Card";
 import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
 import { Typography } from "../components/ui/Typography";
@@ -14,14 +18,25 @@ import type {
 } from "../types/api";
 import {
   BellIcon,
+  BoltIcon,
   BriefcaseIcon,
   CalendarDaysIcon,
   ChatBubbleLeftRightIcon,
+  CheckCircleIcon,
   CheckIcon,
 } from "../components/ui/Icons";
 import { AvaliacaoClienteModal } from "../components/ui/AvaliacaoClienteModal";
 import { get, post, patch, put } from "../lib/api";
 import { toast } from "react-hot-toast";
+import { getClienteCached } from "../lib/entityQueries";
+import { StatusBadge } from "../components/ui/StatusBadge";
+import { Avatar } from "../components/ui/Avatar";
+import { terminalServiceStatuses } from "../lib/serviceStatus";
+import { getErrorMessage } from "../lib/httpError";
+import {
+  assinaturaQueryKey,
+  consultarAssinatura,
+} from "../lib/assinatura";
 
 // Interface para Solicitação
 interface SolicitacaoServico {
@@ -50,17 +65,18 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-const fetchWorkerData = async (workerId: string): Promise<WorkerData> => {
+const fetchWorkerData = async (
+  workerId: string,
+  queryClient: QueryClient,
+): Promise<WorkerData> => {
   const allServices = await get<Servico[]>(
     `/servicos?trabalhadorId=${workerId}`
   );
   const activeServices = allServices.filter(
-    (s) =>
-      s.statusServico === "EM_ANDAMENTO" ||
-      s.statusServico === "PENDENTE_APROVACAO"
+    (service) => !terminalServiceStatuses.includes(service.statusServico),
   );
   const finishedServices = allServices.filter(
-    (s) => s.statusServico === "FINALIZADO"
+    (service) => terminalServiceStatuses.includes(service.statusServico),
   );
   const allSolicitations = await get<SolicitacaoServico[]>(
     "/solicitacoes-servico"
@@ -71,8 +87,8 @@ const fetchWorkerData = async (workerId: string): Promise<WorkerData> => {
       sol.status === "PENDENTE"
   );
 
-  const hydrateCliente = async (item: any) => {
-    const cliente = await get<Cliente>(`/clientes/id/${item.clienteId}`);
+  const hydrateCliente = async <T extends { clienteId: string }>(item: T) => {
+    const cliente = await getClienteCached(queryClient, item.clienteId);
     return { ...item, cliente };
   };
 
@@ -105,9 +121,16 @@ export function DashboardTrabalhadorPage() {
     useState<Servico | null>(null);
   const [isMutating, setIsMutating] = useState(false);
 
+  const { data: assinatura } = useQuery({
+    queryKey: assinaturaQueryKey,
+    queryFn: consultarAssinatura,
+    enabled: !!trabalhador.id,
+    refetchOnWindowFocus: true,
+  });
+
   const { data, isLoading } = useQuery({
     queryKey: ["workerData", trabalhador.id],
-    queryFn: () => fetchWorkerData(trabalhador.id),
+    queryFn: () => fetchWorkerData(trabalhador.id, queryClient),
     enabled: !!trabalhador.id,
     refetchInterval: 5000,
   });
@@ -126,6 +149,11 @@ export function DashboardTrabalhadorPage() {
 
   // --- Handlers ---
   const handleAccept = async (solicitacao: SolicitacaoServico) => {
+    if (assinatura?.cobrancaHabilitada && !assinatura.ativa) {
+      toast.error("Ative sua assinatura para aceitar novos serviços.");
+      navigate("/painel/assinatura");
+      return;
+    }
     setIsMutating(true);
     try {
       await post<Servico>("/servicos", {
@@ -139,9 +167,8 @@ export function DashboardTrabalhadorPage() {
       });
       toast.success("Serviço aceito! O chat foi liberado.");
       queryClient.invalidateQueries({ queryKey: ["workerData"] });
-    } catch (error: any) {
-      const msg = error.response?.data?.message || "Erro ao aceitar serviço.";
-      toast.error(msg);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Erro ao aceitar serviço."));
     } finally {
       setIsMutating(false);
     }
@@ -194,10 +221,31 @@ export function DashboardTrabalhadorPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-10"
+      className="space-y-6 sm:space-y-8 lg:space-y-10"
     >
+      {assinatura?.cobrancaHabilitada && !assinatura.ativa && (
+        <motion.div variants={itemVariants}>
+          <Card className="flex flex-col gap-5 border-status-pending/40 bg-status-pending/5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-status-pending">
+                Assinatura necessária
+              </p>
+              <Typography as="h2" className="mt-1 !text-xl">
+                Ative seu plano para aparecer nas buscas e aceitar novos serviços
+              </Typography>
+              <p className="mt-2 text-sm text-dark-subtle">
+                O pagamento mensal é processado com segurança pelo Mercado Pago.
+              </p>
+            </div>
+            <Button className="shrink-0" variant="secondary" onClick={() => navigate("/painel/assinatura") }>
+              Ver assinatura
+            </Button>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Header e KPIs omitidos para brevidade, mantidos iguais */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row">
         <motion.div variants={itemVariants} className="flex-1">
           <Card className="relative h-full overflow-hidden border-l-4 border-l-accent bg-gradient-to-br from-dark-surface to-dark-surface_hover p-5 sm:p-8">
             <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -257,14 +305,14 @@ export function DashboardTrabalhadorPage() {
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
         {/* Solicitações */}
         <section className="lg:col-span-2 space-y-6">
           <motion.div
             variants={itemVariants}
             className="flex items-center gap-2 border-b border-white/10 pb-2"
           >
-            <span className="text-accent text-xl">⚡</span>
+            <BoltIcon className="h-5 w-5 text-accent" />
             <Typography as="h2" className="!text-2xl">
               Solicitações Pendentes
             </Typography>
@@ -281,10 +329,8 @@ export function DashboardTrabalhadorPage() {
                   >
                     <div className="flex flex-col sm:flex-row justify-between gap-4">
                       <div className="flex min-w-0 gap-3 sm:gap-4">
-                        <img
-                          src={sol.cliente?.avatarUrl || "/default-avatar.png"}
-                          className="w-14 h-14 rounded-full object-cover border-2 border-dark-subtle/30"
-                        />
+                        <Avatar src={sol.cliente?.avatarUrl} name={sol.cliente?.nome}
+                          className="w-14 h-14 rounded-full border-2 border-dark-subtle/30" />
                         <div className="min-w-0">
                           <h3 className="text-lg font-bold text-white">
                             {sol.cliente?.nome}
@@ -302,7 +348,7 @@ export function DashboardTrabalhadorPage() {
                           size="sm"
                           variant="secondary"
                           onClick={() => handleAccept(sol)}
-                          disabled={isMutating}
+                          disabled={isMutating || (assinatura?.cobrancaHabilitada && !assinatura.ativa)}
                           className="w-full shadow-glow-accent"
                         >
                           Aceitar
@@ -357,10 +403,8 @@ export function DashboardTrabalhadorPage() {
                     </div>
                   )}
                   <div className="flex items-center gap-3 mb-3">
-                    <img
-                      src={servico.cliente?.avatarUrl}
-                      className="w-10 h-10 rounded-full"
-                    />
+                    <Avatar src={servico.cliente?.avatarUrl} name={servico.cliente?.nome}
+                      className="w-10 h-10 rounded-full" />
                     <div className="overflow-hidden">
                       <p className="font-bold text-white truncate">
                         {servico.cliente?.nome}
@@ -368,13 +412,16 @@ export function DashboardTrabalhadorPage() {
                       <p className="text-xs text-dark-subtle truncate">
                         {servico.titulo}
                       </p>
+                      <div className="mt-2">
+                        <StatusBadge status={servico.statusServico} />
+                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => navigate(`/dashboard/chat/${servico.id}`)}
+                      onClick={() => navigate(`/painel/chat/${servico.id}`)}
                     >
                       <ChatBubbleLeftRightIcon className="w-4 h-4" /> Chat
                     </Button>
@@ -398,6 +445,15 @@ export function DashboardTrabalhadorPage() {
                       </Button>
                     )}
                   </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigate(`/painel/suporte?novo=disputa&servicoId=${servico.id}`)
+                    }
+                    className="mt-3 text-xs font-semibold text-dark-subtle transition hover:text-primary"
+                  >
+                    Precisa de ajuda? Abrir disputa
+                  </button>
                 </Card>
               ))
             ) : (
@@ -415,7 +471,7 @@ export function DashboardTrabalhadorPage() {
             className="border-t border-white/10 pt-8"
           >
             <Typography as="h2" className="!text-2xl">
-              ✅ Histórico
+              <CheckCircleIcon className="h-6 w-6 text-primary" /> Histórico
             </Typography>
           </motion.div>
           <div className="grid md:grid-cols-2 gap-4">
@@ -436,18 +492,16 @@ export function DashboardTrabalhadorPage() {
                 >
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={servico.cliente?.avatarUrl}
-                        className="w-10 h-10 rounded-full"
-                      />
+                      <Avatar src={servico.cliente?.avatarUrl} name={servico.cliente?.nome}
+                        className="w-10 h-10 rounded-full" />
                       <div>
                         <Typography as="h3" className="!text-lg">
                           {servico.titulo}
                         </Typography>
-                        <p className="text-sm text-dark-subtle">Finalizado</p>
+                        <StatusBadge status={servico.statusServico} />
                       </div>
                     </div>
-                    {isReviewed ? (
+                    {servico.statusServico !== "FINALIZADO" ? null : isReviewed ? (
                       <Button
                         size="sm"
                         variant="outline"

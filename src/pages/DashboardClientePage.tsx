@@ -17,12 +17,15 @@ import {
   BriefcaseIcon,
   CheckIcon,
   CogIcon,
+  StarIcon,
   WrenchScrewdriverIcon,
   XMarkIcon,
 
 } from "../components/ui/Icons";
 import { AvaliacaoModal } from "../components/ui/AvaliacaoModal";
 import { get, put } from "../lib/api";
+import { StatusBadge } from "../components/ui/StatusBadge";
+import { terminalServiceStatuses } from "../lib/serviceStatus";
 
 // --- FETCHERS MANTIDOS IGUAIS ---
 const fetchServicosCliente = async (clienteId: string): Promise<Servico[]> =>
@@ -118,10 +121,11 @@ export function DashboardClientePage() {
     if (!servicos) return [[], []];
     return [
       servicos.filter(
-        (s) =>
-          !["FINALIZADO", "CANCELADO", "RECUSADO"].includes(s.statusServico)
+        (service) => !terminalServiceStatuses.includes(service.statusServico),
       ),
-      servicos.filter((s) => s.statusServico === "FINALIZADO"),
+      servicos.filter((service) =>
+        terminalServiceStatuses.includes(service.statusServico),
+      ),
     ];
   }, [servicos]);
 
@@ -151,25 +155,6 @@ export function DashboardClientePage() {
     }
   }, [reviewedServiceIds, reviewingService, servicos, servicosAvaliados]);
 
-  // Tag de Status com visual Neon
-  const renderStatusTag = (status: StatusServico) => {
-    const styles: Record<string, string> = {
-      PENDENTE_APROVACAO:
-        "bg-status-pending/20 text-status-pending border-status-pending/50 animate-pulse",
-      EM_ANDAMENTO: "bg-primary/20 text-primary border-primary/50",
-      PENDENTE: "bg-dark-subtle/20 text-dark-subtle border-dark-subtle/30",
-      SOLICITADO: "bg-dark-subtle/20 text-dark-subtle border-dark-subtle/30",
-    };
-    const style = styles[status] || "bg-dark-surface text-dark-subtle";
-    return (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-bold border ${style}`}
-      >
-        {status.replace("_", " ")}
-      </span>
-    );
-  };
-
   if (isLoading)
     return (
       <div className="flex justify-center py-32">
@@ -183,10 +168,10 @@ export function DashboardClientePage() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="space-y-10"
+        className="space-y-6 sm:space-y-8 lg:space-y-10"
       >
         {/* HEADER */}
-        <div className="flex flex-col items-stretch justify-between border-b border-white/10 pb-6 md:flex-row md:items-end">
+        <div className="flex flex-col items-stretch justify-between gap-4 border-b border-primary/10 pb-5 md:flex-row md:items-end md:gap-6 md:pb-6">
           <motion.div variants={itemVariants}>
             <Typography
               as="h1"
@@ -204,13 +189,13 @@ export function DashboardClientePage() {
           </motion.div>
           <motion.div
             variants={itemVariants}
-            className="mt-4 flex w-full flex-col gap-3 sm:flex-row md:mt-0 md:w-auto"
+            className="flex w-full flex-col gap-2 min-[380px]:flex-row md:w-auto md:gap-3"
           >
             {isAuthenticated && (
               <Button
                 variant="outline"
                 size="md"
-                onClick={() => navigate("/dashboard/configuracoes")}
+                onClick={() => navigate("/painel/configuracoes")}
               >
                 <CogIcon className="w-6 h-6" />
               </Button>
@@ -219,7 +204,7 @@ export function DashboardClientePage() {
               variant="secondary"
               size="lg"
               className="w-full shadow-glow-accent sm:w-auto"
-              onClick={() => navigate("/dashboard/solicitar")}
+              onClick={() => navigate("/profissionais")}
             >
               {isAuthenticated ? "Novo Pedido +" : "Explorar Profissionais"}
             </Button>
@@ -227,7 +212,7 @@ export function DashboardClientePage() {
         </div>
 
         {/* DASHBOARD CONTENT */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
           {isAuthenticated ? (
             <section className="lg:col-span-2 space-y-6">
               <motion.div
@@ -262,7 +247,7 @@ export function DashboardClientePage() {
                               {servico.titulo}
                             </h3>
                             <div className="flex items-center gap-3 mt-2">
-                              {renderStatusTag(servico.statusServico)}
+                              <StatusBadge status={servico.statusServico} />
                             </div>
                           </div>
 
@@ -303,7 +288,7 @@ export function DashboardClientePage() {
                                 variant="primary"
                                 className="w-full"
                                 onClick={() =>
-                                  navigate(`/dashboard/chat/${servico.id}`)
+                                  navigate(`/painel/chat/${servico.id}`)
                                 }
                               >
                                 Abrir Chat
@@ -315,6 +300,15 @@ export function DashboardClientePage() {
                             )}
                           </div>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(`/painel/suporte?novo=disputa&servicoId=${servico.id}`)
+                          }
+                          className="mt-3 text-xs font-semibold text-dark-subtle transition hover:text-primary"
+                        >
+                          Precisa de ajuda? Abrir disputa
+                        </button>
                       </Card>
                     ))
                   ) : (
@@ -352,7 +346,7 @@ export function DashboardClientePage() {
                 as="h2"
                 className="!text-xl mb-4 flex items-center gap-2"
               >
-                <span className="text-accent">★</span> Profissionais em Alta
+                <StarIcon className="h-5 w-5 text-accent" /> Profissionais em Alta
               </Typography>
               <div className="grid gap-4">
                 {trabalhadores?.slice(0, 3).map((t) => (
@@ -386,9 +380,11 @@ export function DashboardClientePage() {
                   >
                     <div>
                       <h4 className="font-bold">{servico.titulo}</h4>
-                      <p className="text-xs text-dark-subtle">Concluído</p>
+                      <div className="mt-2">
+                        <StatusBadge status={servico.statusServico} />
+                      </div>
                     </div>
-                    {isReviewed ? (
+                    {servico.statusServico !== "FINALIZADO" ? null : isReviewed ? (
                       <span className="text-xs text-accent flex items-center">
                         <CheckIcon className="w-3 h-3 mr-1" /> Avaliado
                       </span>

@@ -193,3 +193,244 @@ export function CalendarDaysIcon(props: ComponentProps<"svg">) {
     </svg>
   );
 }
+
+export function StarIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`fill-current stroke-current stroke-[1.5] ${props.className ?? ""}`}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m12 3 2.78 5.63 6.22.9-4.5 4.39 1.06 6.2L12 17.2l-5.56 2.92 1.06-6.2L3 9.53l6.22-.9L12 3Z"
+      />
+    </svg>
+  );
+}
+
+export function BoltIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`${iconBase} ${props.className ?? ""}`}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m13 2-8.5 11H11l-1 9 8.5-12H12l1-8Z"
+      />
+    </svg>
+  );
+}
+
+export function CheckCircleIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`${iconBase} ${props.className ?? ""}`}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+      />
+    </svg>
+  );
+}
+
+export function DocumentTextIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`${iconBase} ${props.className ?? ""}`}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375H14.25V6.375A3.375 3.375 0 0 0 10.875 3H8.25m0 12.75h7.5m-7.5 3h4.5m-6.75 3h12a1.5 1.5 0 0 0 1.5-1.5V11.25L11.25 3H6a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 6 21.75Z"
+      />
+    </svg>
+  );
+}
+
+export function CameraIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`${iconBase} ${props.className ?? ""}`}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6.827 6.175A2.31 2.31 0 0 1 9.186 4.5h5.628a2.31 2.31 0 0 1 2.359 1.675l.243.9a.75.75 0 0 0 .724.55H19.5A2.25 2.25 0 0 1 21.75 9.875v7.875A2.25 2.25 0 0 1 19.5 20H4.5a2.25 2.25 0 0 1-2.25-2.25V9.875A2.25 2.25 0 0 1 4.5 7.625h1.36a.75.75 0 0 0 .724-.55l.243-.9ZM15.75 13.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+      />
+    </svg>
+  );
+}
+
+export function ArrowRightIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`${iconBase} ${props.className ?? ""}`}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+    </svg>
+  );
+}
+
+export function ArrowUpRightIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`${iconBase} ${props.className ?? ""}`}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17 17 7M8 7h9v9" />
+    </svg>
+  );
+}
+
+export function ChevronDownIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`${iconBase} ${props.className ?? ""}`}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+export function ChevronLeftIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`${iconBase} ${props.className ?? ""}`}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="m15 18-6-6 6-6" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`${iconBase} ${props.className ?? ""}`}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="m9 6 6 6-6 6" />
+    </svg>
+  );
+}
+
+export function TrashIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      {...props}
+      className={`${iconBase} ${props.className ?? ""}`}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="m14.74 9-.35 9m-4.78 0L9.26 9m9.97-3.21c.35.05.7.1 1.02.16M19.23 5.79 18.16 19.67A2.25 2.25 0 0 1 15.92 21.75H8.08a2.25 2.25 0 0 1-2.24-2.08L4.77 5.79m14.46 0a48.1 48.1 0 0 0-3.48-.4m-10.98.4c-.35.05-.7.1-1.02.16m1.02-.16a48.1 48.1 0 0 1 3.48-.4m7.5 0V4.47c0-1.18-.91-2.17-2.09-2.21a44.5 44.5 0 0 0-3.32 0 2.18 2.18 0 0 0-2.09 2.21v.92m7.5 0a48.67 48.67 0 0 0-7.5 0"
+      />
+    </svg>
+  );
+}
+
+export function DashboardIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 24 24" {...props} className={`${iconBase} ${props.className ?? ""}`}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h6v6H4V4Zm10 0h6v10h-6V4ZM4 14h6v6H4v-6Zm10 4h6v2h-6v-2Z" />
+    </svg>
+  );
+}
+
+export function SearchIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 24 24" {...props} className={`${iconBase} ${props.className ?? ""}`}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="m20 20-4.4-4.4m2.4-5.1a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" />
+    </svg>
+  );
+}
+
+export function UserIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 24 24" {...props} className={`${iconBase} ${props.className ?? ""}`}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 21a7.5 7.5 0 0 1 15 0" />
+    </svg>
+  );
+}
+
+export function CreditCardIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 24 24" {...props} className={`${iconBase} ${props.className ?? ""}`}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5h18m-16.5-3h15A1.5 1.5 0 0 1 21 6v12a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18V6a1.5 1.5 0 0 1 1.5-1.5ZM6.75 15h3" />
+    </svg>
+  );
+}
+
+export function SlidersIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 24 24" {...props} className={`${iconBase} ${props.className ?? ""}`}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h10m4 0h2M4 12h2m4 0h10M4 18h7m4 0h5M14 4v4M6 10v4m5 2v4" />
+    </svg>
+  );
+}
+
+export function ShieldCheckIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 24 24" {...props} className={`${iconBase} ${props.className ?? ""}`}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3 4.5 6v5.25c0 4.64 3.18 8.72 7.5 9.75 4.32-1.03 7.5-5.11 7.5-9.75V6L12 3Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m8.75 12 2.15 2.15 4.35-4.65" />
+    </svg>
+  );
+}
+
+export function FlagIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 24 24" {...props} className={`${iconBase} ${props.className ?? ""}`}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 21V4m0 1h9.25l-.9 2.75L16 10.5H5" />
+    </svg>
+  );
+}
+
+export function InboxIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 24 24" {...props} className={`${iconBase} ${props.className ?? ""}`}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 5.25h15l2.25 9v4.5A2.25 2.25 0 0 1 19.5 21h-15a2.25 2.25 0 0 1-2.25-2.25v-4.5l2.25-9Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 14.25h5.1a2.25 2.25 0 0 0 2.01 1.25h5.28a2.25 2.25 0 0 0 2.01-1.25h5.1" />
+    </svg>
+  );
+}
+
+export function UsersIcon(props: ComponentProps<"svg">) {
+  return (
+    <svg viewBox="0 0 24 24" {...props} className={`${iconBase} ${props.className ?? ""}`}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 7.5a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 21a7.5 7.5 0 0 1 15 0M18 8.25a3 3 0 0 1 0 5.5M20.25 20a5.5 5.5 0 0 0-2.7-4.72" />
+    </svg>
+  );
+}

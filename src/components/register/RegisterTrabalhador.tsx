@@ -9,8 +9,14 @@ import { AddressForm } from "./AddressForm";
 import { ImageUpload } from "../ui/ImageUpload";
 import { useAuthStore } from "../../store/useAuthStore";
 import { api, ensureCsrfToken, refreshCsrfToken } from "../../lib/api";
-import { allServicosList, type TipoServico } from "../../types/api";
+import {
+  allServicosList,
+  formatTipoServico,
+  type TipoServico,
+} from "../../types/api";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "../../lib/httpError";
+import { Select } from "../ui/Select";
 
 const formatTelefone = (v: string) =>
   v
@@ -45,7 +51,10 @@ export function RegisterTrabalhador() {
     sobre: "",
   });
 
-  const updateData = (field: string, value: any) =>
+  const updateData = <K extends keyof typeof data>(
+    field: K,
+    value: (typeof data)[K],
+  ) =>
     setData((prev) => ({ ...prev, [field]: value }));
   const updateAddress = (field: string, value: string) =>
     setData((prev) => ({
@@ -109,7 +118,7 @@ export function RegisterTrabalhador() {
         disponibilidade: data.disponibilidade,
         sobre: data.sobre,
         notaTrabalhador: 0.0, // <--- Começando do zero, como deve ser
-        avatarUrl: data.avatarUrl || "https://via.placeholder.com/150",
+        avatarUrl: data.avatarUrl || null,
       };
       await api.post("/trabalhadores", payload);
       const { data: session } = await api.post("/auth/login", {
@@ -119,9 +128,9 @@ export function RegisterTrabalhador() {
       login({ ...session.user, role: session.role });
       await refreshCsrfToken();
       toast.success("Bem-vindo ao time!");
-      navigate("/dashboard");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Erro ao cadastrar.");
+      navigate("/painel/assinatura", { replace: true });
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Erro ao cadastrar."));
     } finally {
       setIsLoading(false);
     }
@@ -273,22 +282,21 @@ export function RegisterTrabalhador() {
                 >
                   Seu Serviço Principal
                 </Typography>
-                <select
+                <Select
                   value={data.servicoPrincipal}
-                  onChange={(e) =>
-                    updateData("servicoPrincipal", e.target.value)
+                  onChange={(value) =>
+                    updateData(
+                      "servicoPrincipal",
+                      value,
+                    )
                   }
-                  className="w-full bg-dark-background border border-white/10 rounded-xl p-3 text-white focus:border-accent outline-none"
-                >
-                  <option value="" disabled>
-                    Selecione o destaque...
-                  </option>
-                  {data.habilidades.map((s) => (
-                    <option key={s} value={s}>
-                      {s.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
+                  options={data.habilidades.map((servico) => ({
+                    value: servico,
+                    label: formatTipoServico(servico),
+                  }))}
+                  placeholder="Selecione o destaque..."
+                  ariaLabel="Serviço principal"
+                />
               </div>
 
               <Input
@@ -332,7 +340,7 @@ export function RegisterTrabalhador() {
           {isLoading
             ? "Salvando..."
             : step === 4
-            ? "Finalizar Cadastro 🚀"
+            ? "Finalizar Cadastro"
             : "Próximo"}
         </Button>
       </div>

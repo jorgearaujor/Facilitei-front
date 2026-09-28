@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
+import { StarIcon } from "../components/ui/Icons";
 import { Card } from "../components/ui/Card";
 import { Typography } from "../components/ui/Typography";
 import { Input } from "../components/ui/Input";
@@ -7,10 +8,13 @@ import { Textarea } from "../components/ui/Textarea"; // <--- Importado
 import { Button } from "../components/ui/Button";
 import { ImageUpload } from "../components/ui/ImageUpload";
 import type { Trabalhador, TipoServico } from "../types/api";
-import { allServicosList } from "../types/api";
+import { allServicosList, formatTipoServico } from "../types/api";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { api } from "../lib/api";
+import { PortfolioManager } from "../components/ui/PortfolioManager";
+import { getErrorMessage } from "../lib/httpError";
+import { Select } from "../components/ui/Select";
 
 export function TrabalhadorSettingsPage() {
   const { user, login } = useAuthStore();
@@ -22,7 +26,7 @@ export function TrabalhadorSettingsPage() {
       if (user?.id) {
         try {
           const { data } = await api.get<Trabalhador>(
-            "/trabalhadores/me"
+            `/trabalhadores/buscarPorId/${user.id}`
           );
           setFormData({ ...data, servicos: data.servicos || [] });
         } catch {
@@ -58,8 +62,8 @@ export function TrabalhadorSettingsPage() {
       );
       login({ ...data, role: "trabalhador" });
       toast.success("Perfil atualizado!");
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Erro ao salvar.");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Erro ao salvar."));
     } finally {
       setIsLoading(false);
     }
@@ -101,8 +105,9 @@ export function TrabalhadorSettingsPage() {
             </p>
             <div className="w-full border-t border-white/10 pt-4 text-left">
               <p className="text-xs text-dark-subtle mb-1">Nota Atual</p>
-              <p className="text-xl font-bold text-white">
-                ⭐ {formData.notaTrabalhador?.toFixed(1)}
+              <p className="flex items-center gap-1 text-xl font-bold text-white">
+                <StarIcon className="h-4 w-4" />
+                {formData.notaTrabalhador?.toFixed(1)}
               </p>
             </div>
           </Card>
@@ -207,24 +212,35 @@ export function TrabalhadorSettingsPage() {
                 >
                   Destaque Principal
                 </Typography>
-                <select
+                <Select
                   value={formData.servicoPrincipal}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setFormData({
                       ...formData,
-                      servicoPrincipal: e.target.value as TipoServico,
+                      servicoPrincipal: value,
                     })
                   }
-                  className="w-full bg-dark-surface border border-white/20 rounded-xl p-3 text-white focus:border-accent outline-none"
-                >
-                  {formData.servicos.map((s) => (
-                    <option key={s} value={s}>
-                      {s.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
+                  options={formData.servicos.map((servico) => ({
+                    value: servico,
+                    label: formatTipoServico(servico),
+                  }))}
+                  ariaLabel="Serviço principal"
+                />
               </div>
             )}
+
+            <div className="border-t border-white/10 pt-6">
+              <Typography
+                as="h3"
+                className="!text-xl font-semibold mb-4 text-primary"
+              >
+                Portfólio de trabalhos
+              </Typography>
+              <PortfolioManager
+                trabalhadorId={String(formData.id)}
+                servicos={formData.servicos}
+              />
+            </div>
 
             <div className="pt-4">
               <Button

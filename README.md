@@ -38,11 +38,12 @@ Este projeto foi construído com um ecossistema moderno de front-end:
   * **Formulários:** [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/) (para validação de schema).
   * **Notificações:** [React Hot Toast](https://react-hot-toast.com/)
   * **Comunicação Real-time:** [@stomp/stompjs](https://stomp-js.github.io/) (para o chat WebSocket).
-  * **Mock API:** [JSON Server](https://github.com/typicode/json-server) (para simular o backend).
 
 ## ⚙️ Instruções de Execução
 
-Para rodar este projeto localmente, você precisará de dois terminais: um para o mock server (backend) e outro para a aplicação React (frontend).
+O frontend consome a API Spring Boot real por meio do proxy `/api`. Em
+desenvolvimento, o Vite encaminha as requisições HTTP e WebSocket para
+`http://localhost:8080`; portanto, inicie a API separadamente antes do front.
 
 ### Pré-requisitos
 
@@ -62,25 +63,72 @@ cd facilitei-react
 npm install
 ```
 
-### 3\. Iniciar o Mock Server (Backend)
-
-O `json-server` irá simular a API REST usando o arquivo `db.json`.
+### 3\. Iniciar a Aplicação React (Frontend)
 
 ```bash
-# Terminal 1
-npm run server
-```
-
-O servidor estará rodando em `http://localhost:3333`.
-
-### 4\. Iniciar a Aplicação React (Frontend)
-
-```bash
-# Terminal 2
 npm run dev
 ```
 
 A aplicação estará disponível em `http://localhost:5173` (ou outra porta indicada pelo Vite).
+
+### Executar o ambiente completo com Docker
+
+O Compose inicia MySQL, API, frontend e um servidor SMTP local para testar a
+recuperação de senha:
+
+```bash
+docker compose up --build -d
+```
+
+Serviços disponíveis:
+
+  * Frontend: `http://localhost:8080`
+  * Swagger da API: `http://localhost:8081/swagger-ui/index.html`
+  * Caixa de e-mail local (Mailpit): `http://localhost:8025`
+
+### Configurar notificações push
+
+O sino do painel e as notificações internas funcionam para todos os usuários
+autenticados. Para também receber avisos com o PWA fechado, copie `.env.example`
+para `.env` e configure um par VAPID exclusivo do ambiente:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Preencha `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY` e `WEB_PUSH_SUBJECT` antes
+de executar o Compose. Nunca versione a chave privada. A permissão do navegador
+é solicitada somente quando o usuário clica em “Ativar notificações”. Em iPhone
+ou iPad, o site precisa estar instalado na tela inicial para usar Web Push.
+
+### Administração e suporte
+
+Defina `APP_ADMIN_EMAILS` no `.env` com uma ou mais contas já cadastradas,
+separadas por vírgula. Após um novo login, essas contas recebem acesso a
+`/admin`, onde podem triar denúncias e disputas, assumir atendimentos, registrar
+notas internas, responder ao usuário e documentar a resolução. Usuários comuns
+abrem e acompanham protocolos em `/painel/suporte`.
+
+Para encerrar os containers preservando os dados do MySQL:
+
+```bash
+docker compose down
+```
+
+### Rotas públicas
+
+As rotas `/dashboard`, `/dashboard/solicitar` e `/trabalhador/:id` são públicas
+intencionalmente para permitir a descoberta de profissionais. A contratação,
+configurações e o chat continuam exigindo autenticação. A recuperação de senha
+usa `/recuperar-senha`; os links enviados pela API abrem `/reset-password?token=...`.
+
+### Contrato aguardado para o portfólio
+
+A seção de portfólio já está preparada no front e permanece desabilitada quando
+a API responde `404`. O contrato isolado em `src/lib/portfolio.ts` aguarda
+`GET /api/portfolio/trabalhador/{id}`, `POST /api/portfolio` e
+`DELETE /api/portfolio/{id}`. O `POST` recebe `trabalhadorId`, `url` e a
+`descricao` opcional; a URL da imagem é gerada pelo upload já existente.
 
 ## 📂 Estrutura de Diretórios (Simplificada)
 
@@ -116,7 +164,6 @@ facilitei-react/
 │   │   └── api.ts           # Definições de tipos (TypeScript)
 │   ├── main.tsx             # Ponto de entrada da aplicação
 │   └── index.css            # Estilos globais (Tailwind)
-├── db.json                  # Banco de dados mock para o JSON Server
 ├── package.json
 └── tailwind.config.js
 ```

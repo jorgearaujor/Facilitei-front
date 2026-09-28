@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactElement,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Typography } from "../components/ui/Typography";
@@ -30,6 +24,8 @@ import {
   SparklesIcon,
 } from "../components/ui/CategoryIcons";
 import { api } from "../lib/api";
+import { Select } from "../components/ui/Select";
+import { SlidersIcon } from "../components/ui/Icons";
 
 // --- MAP ICONES ---
 const categoryIcons: Record<CategoriaGrupo | "TODOS", ReactElement> = {
@@ -93,7 +89,14 @@ const getServicoEmDestaque = (
   selectedService: string,
 ): TipoServico | undefined => {
   if (selectedService !== "TODOS") return selectedService as TipoServico;
-  if (selectedGroup === "TODOS") return undefined;
+  if (selectedGroup === "TODOS") {
+    return (
+      trabalhador.avaliacoesPorServico
+        ?.filter((resumo) => trabalhador.servicos?.includes(resumo.tipoServico))
+        .sort((a, b) => b.media - a.media)[0]?.tipoServico ??
+      trabalhador.servicoPrincipal
+    );
+  }
 
   const servicosDoGrupo = serviceCategories[selectedGroup].filter((servico) =>
     trabalhador.servicos?.includes(servico),
@@ -114,12 +117,13 @@ const getServicoEmDestaque = (
 
 export function SolicitarServicoPage() {
   const [selectedGroup, setSelectedGroup] = useState<CategoriaGrupo | "TODOS">(
-    "TODOS"
+    "TODOS",
   );
   const [selectedService, setSelectedService] = useState<string>("TODOS");
   const [searchTerm, setSearchTerm] = useState("");
   const [minRating, setMinRating] = useState(0);
   const [locationTerm, setLocationTerm] = useState("");
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const debouncedSearchTerm = useDebouncedValue(
     searchTerm.trim(),
@@ -199,22 +203,22 @@ export function SolicitarServicoPage() {
   }, [selectedGroup]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 min-h-[80vh]">
+    <div className="flex min-h-[80vh] flex-col gap-6 lg:flex-row lg:gap-8">
       {/* --- SIDEBAR DE FILTROS (Mobile: Topo, Desktop: Esquerda) --- */}
       <motion.aside
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="w-full lg:w-80 flex-shrink-0 space-y-6"
+        className="w-full flex-shrink-0 space-y-4 lg:w-80 lg:space-y-6"
       >
-        <Card className="border-primary/20 bg-dark-surface/80 p-4 sm:p-6 lg:sticky lg:top-24">
-          <div className="mb-6">
+        <Card className="border-primary/20 bg-dark-surface/90 p-4 sm:p-5 lg:sticky lg:top-24 lg:p-6">
+          <div className="mb-4 lg:mb-6">
             <Typography
               as="h3"
-              className="!text-xl font-bold mb-4 text-white flex items-center gap-2"
+              className="mb-3 flex items-center gap-2 !text-lg font-bold text-white sm:!text-xl lg:mb-4"
             >
               <SparklesIcon className="w-5 h-5 text-accent" /> Categorias
             </Typography>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:grid lg:grid-cols-1 lg:overflow-visible lg:px-0 lg:pb-0">
               {["TODOS", ...allCategoryGroups].map((group) => {
                 const isActive = selectedGroup === group;
                 return (
@@ -225,7 +229,7 @@ export function SolicitarServicoPage() {
                       setSelectedService("TODOS");
                     }}
                     className={`
-                      flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all
+                      flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all lg:w-full lg:rounded-xl lg:py-3
                       ${
                         isActive
                           ? "bg-accent text-on-accent shadow-glow-accent font-bold"
@@ -241,7 +245,7 @@ export function SolicitarServicoPage() {
             </div>
           </div>
 
-          <div className="space-y-4 pt-4 border-t border-white/10">
+          <div className="space-y-4 border-t border-white/10 pt-4">
             <Input
               label="Buscar Nome"
               name="search"
@@ -249,45 +253,63 @@ export function SolicitarServicoPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Input
-              label="Cidade/UF"
-              name="location"
-              placeholder="Ex: São Paulo"
-              value={locationTerm}
-              onChange={(e) => setLocationTerm(e.target.value)}
-            />
 
-            {selectedGroup !== "TODOS" && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-primary">
-                  Especialidade
+            <button
+              type="button"
+              onClick={() => setShowMoreFilters((visible) => !visible)}
+              aria-expanded={showMoreFilters}
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-primary/20 text-sm font-bold text-primary lg:hidden"
+            >
+              <SlidersIcon className="h-5 w-5" />
+              {showMoreFilters ? "Ocultar filtros" : "Local e avaliação"}
+            </button>
+
+            <div
+              className={`${showMoreFilters ? "space-y-4" : "hidden"} lg:block lg:space-y-4`}
+            >
+              <Input
+                label="Cidade/UF"
+                name="location"
+                placeholder="Ex: São Paulo"
+                value={locationTerm}
+                onChange={(e) => setLocationTerm(e.target.value)}
+              />
+
+              {selectedGroup !== "TODOS" && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-primary">
+                    Especialidade
+                  </label>
+                  <Select
+                    value={selectedService}
+                    onChange={setSelectedService}
+                    options={[
+                      { value: "TODOS", label: "Todas" },
+                      ...availableServices.map((servico) => ({
+                        value: servico,
+                        label: formatTipoServico(servico),
+                      })),
+                    ]}
+                    ariaLabel="Especialidade"
+                  />
+                </div>
+              )}
+
+              <div className="pt-2">
+                <label className="block text-sm font-medium text-primary mb-2">
+                  {selectedService === "TODOS"
+                    ? selectedGroup === "TODOS"
+                      ? "Avaliação geral mínima"
+                      : "Melhor avaliação no grupo"
+                    : `Avaliação mínima em ${formatTipoServico(
+                        selectedService as TipoServico,
+                      )}`}
                 </label>
-                <select
-                  className="w-full bg-dark-background border border-white/10 rounded-lg p-3 text-sm text-white focus:border-accent focus:outline-none"
-                  value={selectedService}
-                  onChange={(e) => setSelectedService(e.target.value)}
-                >
-                  <option value="TODOS">Todas</option>
-                  {availableServices.map((s) => (
-                    <option key={s} value={s}>
-                      {s.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
+                <RatingFilter
+                  rating={minRating}
+                  onRatingChange={setMinRating}
+                />
               </div>
-            )}
-
-            <div className="pt-2">
-              <label className="block text-sm font-medium text-primary mb-2">
-                {selectedService === "TODOS"
-                  ? selectedGroup === "TODOS"
-                    ? "Avaliação geral mínima"
-                    : "Melhor avaliação no grupo"
-                  : `Avaliação mínima em ${formatTipoServico(
-                      selectedService as TipoServico,
-                    )}`}
-              </label>
-              <RatingFilter rating={minRating} onRatingChange={setMinRating} />
             </div>
           </div>
         </Card>
@@ -298,9 +320,12 @@ export function SolicitarServicoPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 flex flex-wrap items-center justify-between gap-2"
+          className="mb-4 flex flex-wrap items-end justify-between gap-2 sm:mb-6"
         >
-          <Typography as="h2" className="!text-2xl font-bold sm:!text-3xl">
+          <Typography
+            as="h2"
+            className="!text-xl font-bold min-[380px]:!text-2xl sm:!text-3xl"
+          >
             Profissionais Disponíveis{" "}
             <span className="text-accent">({totalTrabalhadores})</span>
           </Typography>
@@ -326,7 +351,7 @@ export function SolicitarServicoPage() {
         ) : (
           <AnimatePresence mode="popLayout">
             <div>
-              <motion.div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <motion.div className="grid grid-cols-1 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {trabalhadores.length > 0 ? (
                   trabalhadores.map((trabalhador) => (
                     <TrabalhadorCard
@@ -342,7 +367,7 @@ export function SolicitarServicoPage() {
                 ) : (
                   <motion.div className="col-span-full py-12 text-center bg-dark-surface/30 rounded-xl border border-dashed border-white/10">
                     <Typography as="p" className="text-xl text-dark-subtle">
-                      Nenhum ninja encontrado para essa busca.
+                      Nenhum profissional encontrado para essa busca.
                     </Typography>
                     <button
                       type="button"

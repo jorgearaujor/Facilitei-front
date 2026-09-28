@@ -8,6 +8,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { toast } from "react-hot-toast";
 import { api, ensureCsrfToken, refreshCsrfToken } from "../lib/api";
 import { motion } from "framer-motion";
+import { getErrorMessage } from "../lib/httpError";
 
 export function LoginPage() {
   const [email, setEmail] = useState("");
@@ -27,15 +28,13 @@ export function LoginPage() {
       const { data } = await api.post("/auth/login", { email, senha });
 
       if (data.user && data.role) {
-        login({ ...data.user, role: data.role });
+        login({ ...data.user, role: data.role, admin: Boolean(data.admin) });
         await refreshCsrfToken();
         toast.success("Login efetuado com sucesso!");
-        navigate(redirectTo || "/dashboard", { replace: true });
+        navigate(redirectTo || (data.admin ? "/admin" : "/painel"), { replace: true });
       }
-    } catch (err: any) {
-      const mensagem =
-        err.response?.data?.message || "Erro ao conectar com o servidor.";
-      toast.error(mensagem);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Erro ao conectar com o servidor."));
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +90,7 @@ export function LoginPage() {
                 className="bg-dark-background/50 border-primary/20 focus:border-accent/50"
               />
               <Link
-                to="#"
+                to="/recuperar-senha"
                 className="absolute top-0 right-0 text-xs text-dark-subtle hover:text-accent transition-colors"
               >
                 Esqueceu a senha?

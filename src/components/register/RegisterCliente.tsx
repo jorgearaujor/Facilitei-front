@@ -8,6 +8,7 @@ import { ImageUpload } from "../ui/ImageUpload";
 import { useAuthStore } from "../../store/useAuthStore";
 import { api, ensureCsrfToken, refreshCsrfToken } from "../../lib/api";
 import { toast } from "react-hot-toast";
+import { getErrorMessage } from "../../lib/httpError";
 
 const formatTelefone = (v: string) =>
   v
@@ -37,7 +38,10 @@ export function RegisterCliente() {
     },
   });
 
-  const updateData = (field: string, value: any) =>
+  const updateData = <K extends keyof typeof data>(
+    field: K,
+    value: (typeof data)[K],
+  ) =>
     setData((prev) => ({ ...prev, [field]: value }));
   const updateAddress = (field: string, value: string) =>
     setData((prev) => ({
@@ -66,7 +70,7 @@ export function RegisterCliente() {
           ...data.endereco,
           cep: data.endereco.cep.replace(/\D/g, ""),
         },
-        avatarUrl: data.avatarUrl || "https://via.placeholder.com/150",
+        avatarUrl: data.avatarUrl || null,
       };
       await api.post("/clientes", payload);
       const { data: session } = await api.post("/auth/login", {
@@ -76,9 +80,9 @@ export function RegisterCliente() {
       login({ ...session.user, role: session.role });
       await refreshCsrfToken();
       toast.success("Conta criada! Bem-vindo.");
-      navigate("/dashboard");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Erro ao cadastrar.");
+      navigate("/painel");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Erro ao cadastrar."));
     } finally {
       setIsLoading(false);
     }
@@ -213,7 +217,7 @@ export function RegisterCliente() {
           {isLoading
             ? "Criando..."
             : step === 2
-            ? "Finalizar Cadastro 🚀"
+            ? "Finalizar Cadastro"
             : "Continuar"}
         </Button>
       </div>

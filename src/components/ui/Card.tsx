@@ -19,13 +19,12 @@ export function Card({ children, className = "", ...props }: CardProps) {
       variants={variants}
       
       className={`
-        bg-dark-surface/70 
-        backdrop-blur-lg 
-        rounded-xl 
-        border border-primary/20
+        bg-dark-surface/90
+        rounded-[1.25rem] sm:rounded-[1.5rem]
+        border border-primary/15
         transition-all duration-300
-        hover:border-primary/40
-        hover:shadow-glow-primary
+        shadow-soft
+        hover:border-primary/30
         ${className}
       `}
       {...props}

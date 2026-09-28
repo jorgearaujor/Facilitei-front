@@ -1,13 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card } from "../components/ui/Card";
 import { Typography } from "../components/ui/Typography";
 import { Button } from "../components/ui/Button";
-import type { Trabalhador, Cliente, AvaliacaoCliente } from "../types/api";
+import type { Cliente, AvaliacaoCliente } from "../types/api";
 import { useAuthStore } from "../store/useAuthStore";
 import { api } from "../lib/api";
-import { CogIcon } from "../components/ui/Icons";
+import { ChatBubbleLeftRightIcon, CogIcon } from "../components/ui/Icons";
+import { Rating } from "../components/ui/Rating";
+import { Avatar } from "../components/ui/Avatar";
+import { getTrabalhadorCached } from "../lib/entityQueries";
 
 const fetchClienteById = async (id: string): Promise<Cliente> => {
   const { data } = await api.get<Cliente>(`/clientes/id/${id}`);
@@ -15,7 +18,8 @@ const fetchClienteById = async (id: string): Promise<Cliente> => {
 };
 
 const fetchAvaliacoesCliente = async (
-  clienteId: string
+  clienteId: string,
+  queryClient: QueryClient,
 ): Promise<AvaliacaoCliente[]> => {
   try {
     const { data: avaliacoes } = await api.get<AvaliacaoCliente[]>(
@@ -25,8 +29,9 @@ const fetchAvaliacoesCliente = async (
     const hydrated = await Promise.all(
       avaliacoes.map(async (av) => {
         try {
-          const { data: trab } = await api.get<Trabalhador>(
-            `/trabalhadores/buscarPorId/${av.trabalhadorId}`
+          const trab = await getTrabalhadorCached(
+            queryClient,
+            av.trabalhadorId,
           );
           return { ...av, trabalhadorNome: trab.nome };
         } catch {
@@ -40,29 +45,18 @@ const fetchAvaliacoesCliente = async (
   }
 };
 
-const Rating = ({ score }: { score: number }) => {
-  const stars = Array(5)
-    .fill(0)
-    .map((_, i) => (
-      <span
-        key={i}
-        className={`text-2xl ${
-          i < score
-            ? "text-accent drop-shadow-[0_0_5px_rgba(163,230,53,0.6)]"
-            : "text-dark-subtle/20"
-        }`}
-      >
-        ★
-      </span>
-    ));
-  return <div className="flex space-x-1">{stars}</div>;
+type ClienteProfilePageProps = {
+  profileId?: string;
 };
 
-export function ClienteProfilePage() {
+export function ClienteProfilePage({
+  profileId,
+}: ClienteProfilePageProps = {}) {
   const { id } = useParams<{ id: string }>();
-  const clienteId = id || "0";
+  const clienteId = profileId || id || "0";
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     data: cliente,
@@ -71,12 +65,12 @@ export function ClienteProfilePage() {
   } = useQuery<Cliente>({
     queryKey: ["cliente", clienteId],
     queryFn: () => fetchClienteById(clienteId),
-    enabled: !!clienteId,
+    enabled: clienteId !== "0",
   });
 
   const { data: avaliacoes } = useQuery({
     queryKey: ["avaliacoesCliente", cliente?.id],
-    queryFn: () => fetchAvaliacoesCliente(cliente!.id),
+    queryFn: () => fetchAvaliacoesCliente(cliente!.id, queryClient),
     enabled: !!cliente,
   });
 
@@ -112,11 +106,8 @@ export function ClienteProfilePage() {
             <Card className="relative flex flex-col items-center border-t-4 border-t-primary p-5 text-center sm:p-8">
               <div className="relative -mt-20 mb-4">
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary to-white rounded-full blur opacity-30"></div>
-                <img
-                  src={cliente.avatarUrl || "/default-avatar.png"}
-                  alt={cliente.nome}
-                  className="relative w-36 h-36 rounded-full object-cover border-4 border-dark-background shadow-2xl"
-                />
+                <Avatar src={cliente.avatarUrl} name={cliente.nome}
+                  className="relative w-36 h-36 rounded-full border-4 border-dark-background shadow-2xl" />
               </div>
 
               <h1 className="text-2xl font-extrabold text-white mb-1">
@@ -143,10 +134,19 @@ export function ClienteProfilePage() {
                   variant="outline"
                   size="md"
                   className="w-full border-white/20 hover:bg-white/5"
-                  onClick={() => navigate("/dashboard/configuracoes")}
+                  onClick={() => navigate("/painel/configuracoes")}
                 >
                   <CogIcon className="w-5 h-5 mr-2" /> Editar Perfil
                 </Button>
+              )}
+              {user && !isOwner && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/painel/suporte?novo=denuncia&usuarioId=${clienteId}`)}
+                  className="mt-4 w-full text-center text-xs font-bold text-dark-subtle transition hover:text-status-danger"
+                >
+                  Denunciar este perfil
+                </button>
               )}
             </Card>
           </motion.div>
@@ -161,7 +161,7 @@ export function ClienteProfilePage() {
               <Card className="min-h-[400px] p-5 sm:p-8">
                 <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
                   <div className="bg-accent/10 p-2 rounded-lg">
-                    <span className="text-xl">💬</span>
+                    <ChatBubbleLeftRightIcon className="h-6 w-6 text-accent" />
                   </div>
                   <Typography as="h3" className="!text-xl">
                     O que dizem os profissionais

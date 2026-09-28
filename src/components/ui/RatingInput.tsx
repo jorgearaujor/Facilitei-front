@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { StarIcon } from "./Icons";
 
 interface RatingInputProps {
   rating: number;
@@ -22,13 +23,14 @@ export function RatingInput({ rating, onRatingChange }: RatingInputProps) {
             onClick={() => onRatingChange(star)}
             onMouseEnter={() => setHoverRating(star)}
             onMouseLeave={() => setHoverRating(0)}
-            className={`text-4xl transition-colors duration-200 focus:outline-none ${
+            aria-label={`${star} estrelas`}
+            className={`transition-colors duration-200 focus:outline-none ${
               isActive
                 ? "text-accent drop-shadow-[0_0_5px_rgba(163,230,53,0.6)]"
                 : "text-dark-subtle/20"
             }`}
           >
-            ★
+            <StarIcon className="h-9 w-9" />
           </motion.button>
         );
       })}

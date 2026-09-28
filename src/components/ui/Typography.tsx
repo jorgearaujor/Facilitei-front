@@ -8,9 +8,9 @@ type TypographyProps = {
 
 // Mapeamento de estilos base para cada tag
 const tagStyles = {
-  h1: 'text-4xl md:text-5xl font-extrabold text-dark-text tracking-tight',
-  h2: 'text-3xl font-bold text-dark-text',
-  h3: 'text-2xl font-semibold text-dark-text',
+  h1: 'font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-dark-text tracking-[-0.045em]',
+  h2: 'font-display text-2xl sm:text-3xl font-bold text-dark-text tracking-[-0.035em]',
+  h3: 'font-display text-xl sm:text-2xl font-semibold text-dark-text tracking-[-0.025em]',
   p: 'text-base text-dark-subtle',
   span: 'text-base',
 };

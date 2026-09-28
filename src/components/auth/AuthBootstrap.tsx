@@ -1,5 +1,10 @@
 import { useEffect, type ReactNode } from "react";
-import { api, ensureCsrfToken } from "../../lib/api";
+import {
+  api,
+  ensureCsrfToken,
+  isOptionalAuthEndpointUnavailable,
+} from "../../lib/api";
+import axios from "axios";
 import { useAuthStore } from "../../store/useAuthStore";
 
 type AuthBootstrapProps = {
@@ -17,10 +22,15 @@ export function AuthBootstrap({ children }: AuthBootstrapProps) {
         await ensureCsrfToken();
         const { data } = await api.get("/auth/session");
         if (active && data.user && data.role) {
-          login({ ...data.user, role: data.role });
+          login({ ...data.user, role: data.role, admin: Boolean(data.admin) });
         }
-      } catch {
-        if (active) logout();
+      } catch (error) {
+        const status = axios.isAxiosError(error) ? error.response?.status : 0;
+        if (active && (status === 401 || status === 403)) {
+          logout();
+        } else if (!isOptionalAuthEndpointUnavailable(error)) {
+          console.warn("Não foi possível validar a sessão atual.", error);
+        }
       } finally {
         if (active) markInitialized();
       }

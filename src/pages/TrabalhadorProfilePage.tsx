@@ -16,7 +16,28 @@ import { Modal } from "../components/ui/Modal";
 import { Textarea } from "../components/ui/Textarea";
 import { toast } from "react-hot-toast";
 import { get, post } from "../lib/api";
-import { WrenchScrewdriverIcon, CogIcon } from "../components/ui/Icons";
+import {
+  ArrowRightIcon,
+  CameraIcon,
+  CogIcon,
+  DocumentTextIcon,
+  StarIcon,
+  WrenchScrewdriverIcon,
+} from "../components/ui/Icons";
+import { Rating } from "../components/ui/Rating";
+import { Avatar } from "../components/ui/Avatar";
+import { PortfolioGallery } from "../components/ui/PortfolioGallery";
+import { fetchPortfolio } from "../lib/portfolio";
+import { getErrorMessage } from "../lib/httpError";
+import { Select } from "../components/ui/Select";
+
+type SolicitacaoRequest = {
+  clienteId: string;
+  trabalhadorId: string;
+  tipoServico: TipoServico;
+  descricao: string;
+  statusSolicitacao: "PENDENTE";
+};
 
 const fetchTrabalhadorById = async (id: string): Promise<Trabalhador> =>
   get<Trabalhador>(`/trabalhadores/buscarPorId/${id}`);
@@ -32,28 +53,15 @@ const fetchAvaliacoesTrabalhador = async (
   }
 };
 
-const Rating = ({ score }: { score: number }) => {
-  const roundedScore = Math.round(score);
-  const stars = Array(5)
-    .fill(0)
-    .map((_, i) => (
-      <span
-        key={i}
-        className={`text-2xl ${
-          i < roundedScore
-            ? "text-accent drop-shadow-[0_0_5px_rgba(163,230,53,0.6)]"
-            : "text-dark-subtle/20"
-        }`}
-      >
-        ★
-      </span>
-    ));
-  return <div className="flex space-x-1">{stars}</div>;
+type TrabalhadorProfilePageProps = {
+  profileId?: string;
 };
 
-export function TrabalhadorProfilePage() {
+export function TrabalhadorProfilePage({
+  profileId,
+}: TrabalhadorProfilePageProps = {}) {
   const { id } = useParams<{ id: string }>();
-  const trabalhadorId = id || "0";
+  const trabalhadorId = profileId || id || "0";
   const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -73,12 +81,18 @@ export function TrabalhadorProfilePage() {
   } = useQuery<Trabalhador>({
     queryKey: ["trabalhador", trabalhadorId],
     queryFn: () => fetchTrabalhadorById(trabalhadorId),
-    enabled: !!id,
+    enabled: trabalhadorId !== "0",
   });
 
   const { data: avaliacoes, isLoading: isLoadingAvaliacoes } = useQuery({
     queryKey: ["avaliacoesTrabalhador", trabalhador?.id],
     queryFn: () => fetchAvaliacoesTrabalhador(trabalhador!.id),
+    enabled: !!trabalhador,
+  });
+
+  const { data: portfolio, isLoading: isLoadingPortfolio } = useQuery({
+    queryKey: ["portfolio", trabalhadorId],
+    queryFn: () => fetchPortfolio(trabalhadorId),
     enabled: !!trabalhador,
   });
 
@@ -97,19 +111,20 @@ export function TrabalhadorProfilePage() {
   );
 
   const mutationCreateSolicitacao = useMutation({
-    mutationFn: async (data: any) => post("/solicitacoes-servico", data),
+    mutationFn: async (data: SolicitacaoRequest) =>
+      post("/solicitacoes-servico", data),
     onSuccess: () => {
       toast.success("Solicitação enviada! Aguarde o aceite.");
       setIsModalOpen(false);
       setDescricao("");
     },
-    onError: (error: any) =>
-      toast.error(error.response?.data?.message || "Erro ao enviar."),
+    onError: (error: unknown) =>
+      toast.error(getErrorMessage(error, "Erro ao enviar.")),
   });
 
   const handleOpenModal = () => {
     if (!isAuthenticated) {
-      toast("Faça login para contratar.", { icon: "🔒" });
+      toast("Faça login para contratar.");
       navigate(`/login?redirectTo=${location.pathname}`);
       return;
     }
@@ -162,11 +177,8 @@ export function TrabalhadorProfilePage() {
           >
             <Card className="relative flex flex-col items-center overflow-visible border-t-4 border-t-accent p-5 text-center sm:p-8">
               <div className="relative -mt-20 mb-4">
-                <img
-                  src={trabalhador!.avatarUrl || "/default-avatar.png"}
-                  alt={trabalhador!.nome}
-                  className="w-40 h-40 rounded-full object-cover border-4 border-dark-background shadow-2xl"
-                />
+                <Avatar src={trabalhador!.avatarUrl} name={trabalhador!.nome}
+                  className="w-40 h-40 rounded-full border-4 border-dark-background shadow-2xl" />
                 <div
                   className="absolute bottom-2 right-2 bg-green-500 w-5 h-5 rounded-full border-4 border-dark-surface"
                   title="Disponível"
@@ -206,7 +218,7 @@ export function TrabalhadorProfilePage() {
                   variant="outline"
                   size="lg"
                   className="w-full mt-8 border-white/20 hover:bg-white/5 text-white"
-                  onClick={() => navigate("/dashboard/configuracoes")}
+                  onClick={() => navigate("/painel/configuracoes")}
                 >
                   <CogIcon className="w-5 h-5 mr-2" /> Editar Perfil
                 </Button>
@@ -218,9 +230,18 @@ export function TrabalhadorProfilePage() {
                     className="w-full mt-8 shadow-glow-accent font-bold text-lg"
                     onClick={handleOpenModal}
                   >
-                    Contratar Agora 🚀
+                    Contratar agora <ArrowRightIcon className="ml-2 h-5 w-5" />
                   </Button>
                 )
+              )}
+              {isAuthenticated && !isOwner && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/painel/suporte?novo=denuncia&usuarioId=${trabalhadorId}`)}
+                  className="mt-4 w-full text-center text-xs font-bold text-dark-subtle transition hover:text-status-danger"
+                >
+                  Denunciar este perfil
+                </button>
               )}
             </Card>
           </motion.div>
@@ -235,7 +256,7 @@ export function TrabalhadorProfilePage() {
               <Card className="bg-dark-surface/40 p-5 backdrop-blur-sm sm:p-8">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="bg-primary/20 p-2 rounded-lg">
-                    <span className="text-2xl">📝</span>
+                    <DocumentTextIcon className="h-6 w-6 text-primary" />
                   </div>
                   <Typography as="h3" className="!text-xl">
                     Sobre o Profissional
@@ -281,8 +302,9 @@ export function TrabalhadorProfilePage() {
                           {formatTipoServico(servico)}
                         </span>
                         {resumo ? (
-                          <span className="shrink-0 text-sm font-bold text-accent">
-                            ★ {resumo.media.toFixed(1)}
+                          <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-accent">
+                            <StarIcon className="h-4 w-4" />
+                            {resumo.media.toFixed(1)}
                             <span className="ml-1 font-normal text-dark-subtle">
                               ({resumo.quantidadeAvaliacoes})
                             </span>
@@ -305,32 +327,50 @@ export function TrabalhadorProfilePage() {
               transition={{ delay: 0.3 }}
             >
               <Card className="p-5 sm:p-8">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="rounded-lg bg-primary/10 p-2">
+                    <CameraIcon className="h-6 w-6 text-primary" />
+                  </div>
+                  <Typography as="h3" className="!text-xl">
+                    Portfólio
+                  </Typography>
+                </div>
+                <PortfolioGallery
+                  items={portfolio?.items || []}
+                  isLoading={isLoadingPortfolio}
+                  isAvailable={portfolio?.available !== false}
+                />
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="p-5 sm:p-8">
                 <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <div className="rounded-lg bg-yellow-500/10 p-2">
-                      <span className="text-xl">⭐</span>
+                      <StarIcon className="h-6 w-6 text-yellow-500" />
                     </div>
                     <Typography as="h3" className="!text-xl">
                       Avaliações ({avaliacoesFiltradas.length})
                     </Typography>
                   </div>
-                  <select
+                  <Select
                     value={filtroAvaliacao}
-                    onChange={(event) =>
-                      setFiltroAvaliacao(
-                        event.target.value as TipoServico | "TODOS",
-                      )
-                    }
-                    className="rounded-lg border border-white/10 bg-dark-background px-3 py-2 text-sm text-white outline-none focus:border-accent"
-                    aria-label="Filtrar avaliações por especialidade"
-                  >
-                    <option value="TODOS">Todas as especialidades</option>
-                    {trabalhador!.servicos.map((servico) => (
-                      <option key={servico} value={servico}>
-                        {formatTipoServico(servico)}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setFiltroAvaliacao}
+                    options={[
+                      { value: "TODOS", label: "Todas as especialidades" },
+                      ...trabalhador!.servicos.map((servico) => ({
+                        value: servico,
+                        label: formatTipoServico(servico),
+                      })),
+                    ]}
+                    className="w-full sm:w-64"
+                    ariaLabel="Filtrar avaliações por especialidade"
+                  />
                 </div>
 
                 <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
@@ -349,7 +389,9 @@ export function TrabalhadorProfilePage() {
                           <Rating score={av.nota} />
                         </div>
                         <div className="mb-2 inline-flex rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
-                          {formatTipoServico(av.tipoServico)}
+                          {av.tipoServico
+                            ? formatTipoServico(av.tipoServico)
+                            : "Serviço avaliado"}
                         </div>
                         <p className="text-dark-subtle italic">
                           "{av.comentario}"
@@ -383,19 +425,15 @@ export function TrabalhadorProfilePage() {
             <label className="block text-sm font-medium text-primary mb-2">
               Tipo de Serviço
             </label>
-            <select
+            <Select
               value={selectedServico}
-              onChange={(e) =>
-                setSelectedServico(e.target.value as TipoServico)
-              }
-              className="w-full bg-dark-background border border-primary/30 rounded-lg p-3 text-white focus:border-accent outline-none"
-            >
-              {trabalhador!.servicos.map((s) => (
-                <option key={s} value={s}>
-                  {s.replace(/_/g, " ")}
-                </option>
-              ))}
-            </select>
+              onChange={setSelectedServico}
+              options={trabalhador!.servicos.map((servico) => ({
+                value: servico,
+                label: formatTipoServico(servico),
+              }))}
+              ariaLabel="Tipo de serviço"
+            />
           </div>
 
           <Textarea

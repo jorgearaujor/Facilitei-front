@@ -1,6 +1,11 @@
 import { motion } from "framer-motion";
 import { Typography } from "../components/ui/Typography";
 import { Card } from "../components/ui/Card";
+import {
+  CheckCircleIcon,
+  StarIcon,
+  WrenchScrewdriverIcon,
+} from "../components/ui/Icons";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -67,22 +72,28 @@ export function AboutPage() {
             <ul className="space-y-4">
               {[
                 {
-                  icon: "🚀",
+                  icon: CheckCircleIcon,
                   title: "Confiança",
-                  desc: "Profissionais verificados.",
+                  desc: "Perfis, portfólios e avaliações da comunidade.",
                 },
                 {
-                  icon: "⭐",
+                  icon: StarIcon,
                   title: "Qualidade",
                   desc: "Excelência em cada serviço.",
                 },
-                { icon: "🛠️", title: "Simplicidade", desc: "Sem burocracia." },
-              ].map((item, idx) => (
+                {
+                  icon: WrenchScrewdriverIcon,
+                  title: "Simplicidade",
+                  desc: "Sem burocracia.",
+                },
+              ].map((item) => (
                 <li
-                  key={idx}
+                  key={item.title}
                   className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors"
                 >
-                  <span className="text-2xl">{item.icon}</span>
+                  <div className="rounded-lg bg-accent/10 p-2">
+                    <item.icon className="h-5 w-5 text-accent" />
+                  </div>
                   <div>
                     <p className="font-bold text-white">{item.title}</p>
                     <p className="text-sm text-dark-subtle">{item.desc}</p>

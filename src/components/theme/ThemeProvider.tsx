@@ -25,7 +25,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
 
     const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    themeColor?.setAttribute("content", theme === "light" ? "#F8FAFC" : "#081426");
+    themeColor?.setAttribute("content", theme === "light" ? "#F7F4EC" : "#0D1D1A");
   }, [theme]);
 
   const value = useMemo(

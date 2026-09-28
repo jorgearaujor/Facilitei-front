@@ -11,7 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', ...fontFamily.sans],
+        sans: ['Manrope', ...fontFamily.sans],
+        display: ['Sora', 'Manrope', ...fontFamily.sans],
       },
       colors: {
         white: 'rgb(var(--color-strong) / <alpha-value>)',
@@ -36,15 +37,17 @@ export default {
         // Cores semânticas para status
         status: {
           pending: '#F59E0B', // Amarelo/Laranja
+          success: '#22C55E', // Verde
           danger: '#EF4444', // Vermelho
           danger_hover: '#DC2626',
         }
       },
       // Efeito de sombra/brilho
       boxShadow: {
-        'glow-accent': '0 0 16px 0 rgba(163, 230, 53, 0.3)',
-        'glow-primary': '0 0 16px 0 rgba(13, 148, 136, 0.3)',
+        'glow-accent': '0 14px 32px -14px rgba(199, 243, 107, 0.5)',
+        'glow-primary': '0 18px 45px -22px rgba(23, 61, 54, 0.45)',
         'glow-danger': '0 0 16px 0 rgba(239, 68, 68, 0.3)',
+        'soft': '0 24px 70px -35px rgba(17, 42, 36, 0.35)',
       },
       // Animação de pulso mais sutil
       keyframes: {

@@ -25,10 +25,10 @@ export function Textarea({
         id={name}
         name={name}
         className={`
-          w-full bg-dark-surface/50 border-2 border-white/10 rounded-xl px-4 py-3
-          text-white placeholder-dark-subtle/30 min-h-[120px] resize-y
+          w-full bg-dark-background/55 border border-primary/15 rounded-2xl px-4 py-3.5
+          text-dark-text placeholder-dark-subtle/50 min-h-[120px] resize-y
           transition-all duration-300 ease-out
-          focus:outline-none focus:border-accent focus:bg-dark-surface focus:shadow-[0_0_15px_rgba(163,230,53,0.15)]
+          focus:outline-none focus:border-primary focus:bg-dark-surface focus:ring-4 focus:ring-primary/10
           disabled:opacity-50 disabled:cursor-not-allowed
           ${className}
         `}

@@ -1,19 +1,25 @@
-import { Outlet } from "react-router-dom";
-import { Header } from "./Header";
+import { Outlet, useLocation } from "react-router-dom";
 import { Footer } from "./Footer";
+import { Header } from "./Header";
+import { MobilePanelNav } from "./MobilePanelNav";
 
 export function MainLayout() {
+  const { pathname } = useLocation();
+  const isPanelArea = pathname.startsWith("/painel") || pathname.startsWith("/admin");
+  const showFooter = !isPanelArea;
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <Header />
-      {/* AQUI ESTÁ O PULO DO GATO: 
-         Adicionei 'pt-24 md:pt-28' (padding-top) para empurrar o conteúdo 
-         para baixo e não ficar escondido atrás do Header fixo.
-      */}
-      <main className="container mx-auto flex-grow px-4 pb-8 pt-24 sm:px-6 sm:pb-12 md:pt-28">
+      <main
+        className={`mx-auto w-full max-w-7xl flex-grow px-4 pt-20 sm:px-6 sm:pt-24 lg:px-8 lg:pt-28 ${
+          isPanelArea ? "pb-28 lg:pb-20" : "pb-14 sm:pb-20"
+        }`}
+      >
         <Outlet />
       </main>
-      <Footer />
+      {isPanelArea && <MobilePanelNav />}
+      {showFooter && <Footer />}
     </div>
   );
 }

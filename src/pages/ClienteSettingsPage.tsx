@@ -9,9 +9,11 @@ import type { Cliente } from "../types/api";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { api } from "../lib/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function ClienteSettingsPage() {
   const { user, login } = useAuthStore();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Cliente | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,6 +42,7 @@ export function ClienteSettingsPage() {
         formData
       );
       login({ ...updatedUser, role: "cliente" });
+      queryClient.setQueryData(["cliente", String(updatedUser.id)], updatedUser);
       toast.success("Perfil atualizado!");
     } catch {
       toast.error("Erro ao atualizar.");

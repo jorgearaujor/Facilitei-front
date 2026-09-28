@@ -7,6 +7,7 @@ import "./index.css";
 import { AuthBootstrap } from "./components/auth/AuthBootstrap";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { ThemedToaster } from "./components/theme/ThemedToaster";
+import { PwaStatus } from "./components/pwa/PwaStatus";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,6 +23,7 @@ createRoot(document.getElementById("root")!).render(
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <ThemedToaster />
+        <PwaStatus />
         <AuthBootstrap>
           <RouterProvider router={router} />
         </AuthBootstrap>

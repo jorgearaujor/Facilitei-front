@@ -50,7 +50,9 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                 {title}
               </h2>
               <button
+                type="button"
                 onClick={onClose}
+                aria-label="Fechar modal"
                 className="w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-dark-subtle hover:bg-red-500/20 hover:text-red-500 transition-all"
               >
                 &times;

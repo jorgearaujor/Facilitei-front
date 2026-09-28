@@ -1,0 +1,91 @@
+name: facilitei
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-facilitei
+    environment:
+      MYSQL_DATABASE: faciliteidb
+      MYSQL_ROOT_PASSWORD: admin
+    volumes:
+      - facilitei_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-padmin"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: mailpit-facilitei
+    ports:
+      - "8025:8025"
+    restart: unless-stopped
+
+  api-facilitei:
+    container_name: api-facilitei
+    build:
+      context: ../facilitei-api
+      dockerfile_inline: |
+        FROM maven:3.9-amazoncorretto-21 AS build
+        WORKDIR /app
+        COPY pom.xml .
+        COPY src ./src
+        RUN --mount=type=cache,target=/root/.m2 mvn -q clean package -DskipTests
+
+        FROM amazoncorretto:21-alpine
+        WORKDIR /app
+        COPY --from=build /app/target/*.jar app.jar
+        EXPOSE 8080
+        ENTRYPOINT ["java", "-jar", "app.jar"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/faciliteidb?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: admin
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+      RESET_PASSWORD_URL: http://localhost:8080/reset-password
+      APP_FRONTEND_URL: http://localhost:8080
+      MYAPP_CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:8080
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_REGION: ${AWS_REGION:-sa-east-1}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+      AWS_S3_PUBLIC_BASE_URL: ${AWS_S3_PUBLIC_BASE_URL:-}
+      AWS_S3_ENDPOINT: ${AWS_S3_ENDPOINT:-}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
+      MERCADOPAGO_WEBHOOK_SECRET: ${MERCADOPAGO_WEBHOOK_SECRET:-}
+      MERCADOPAGO_MONTHLY_AMOUNT_CENTS: ${MERCADOPAGO_MONTHLY_AMOUNT_CENTS:-0}
+      MERCADOPAGO_REASON: ${MERCADOPAGO_REASON:-Facilitei - plano profissional}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      PASSWORD_MIGRATION_ENABLED: ${PASSWORD_MIGRATION_ENABLED:-true}
+      WEB_PUSH_PUBLIC_KEY: ${WEB_PUSH_PUBLIC_KEY:-}
+      WEB_PUSH_PRIVATE_KEY: ${WEB_PUSH_PRIVATE_KEY:-}
+      WEB_PUSH_SUBJECT: ${WEB_PUSH_SUBJECT:-mailto:contato@facilitei.app}
+      APP_ADMIN_EMAILS: ${APP_ADMIN_EMAILS:-}
+    ports:
+      - "8081:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    restart: unless-stopped
+
+  front:
+    container_name: front-facilitei
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      api-facilitei:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  facilitei_mysql_data:
