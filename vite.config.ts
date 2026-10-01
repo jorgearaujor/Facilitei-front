@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
+  const env = loadEnv(mode, '.', '')
   const apiBaseUrl = (env.VITE_API_BASE_URL ?? 'https://facilitei-api.onrender.com').replace(/\/$/, '')
   const wsBaseUrl = apiBaseUrl.replace(/^http/, 'ws')
 
