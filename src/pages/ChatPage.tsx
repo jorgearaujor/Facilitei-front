@@ -7,6 +7,7 @@ import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { api, uploadFile } from "../lib/api";
+import { WS_BASE_URL } from "../lib/config";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 
@@ -20,7 +21,7 @@ interface ChatMessage {
 }
 
 const stompConfig = {
-  brokerURL: `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/buildrun-livechat-websocket`,
+  brokerURL: `${WS_BASE_URL}/buildrun-livechat-websocket`,
   reconnectDelay: 5000,
 };
 

@@ -1,10 +1,10 @@
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 
 // Cria a instância do Axios
 export const api = axios.create({
-  // No Docker, o Nginx encaminha /api para o container do Spring Boot.
-  // A URL relativa tambem mantem front e API na mesma origem no navegador.
-  baseURL: '/api',
+  // URL da API definida por VITE_API_BASE_URL (ver src/lib/config.ts).
+  baseURL: `${API_BASE_URL}/api`,
   withCredentials: true,
   withXSRFToken: true,
   headers: {
