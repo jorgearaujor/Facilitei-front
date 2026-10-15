@@ -6,8 +6,7 @@ import { Typography } from "../components/ui/Typography";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
-import { api, uploadFile } from "../lib/api";
-import { WS_BASE_URL } from "../lib/config";
+import { api, getCsrfToken, uploadFile } from "../lib/api";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 
@@ -20,16 +19,16 @@ interface ChatMessage {
   dataEnvio: string;
 }
 
-const stompConfig = {
-  brokerURL: `${WS_BASE_URL}/buildrun-livechat-websocket`,
-  reconnectDelay: 5000,
-};
+// Em producao a API fica em outra origem (Render); usamos a URL do WebSocket
+// definida por variavel de ambiente. Em desenvolvimento caimos na mesma origem
+// do navegador, que o proxy do Vite encaminha para a API local.
+const wsUrl =
+  (import.meta.env.VITE_WS_URL as string | undefined) ||
+  `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/buildrun-livechat-websocket`;
 
-const readCsrfCookie = (): string => {
-  const cookie = document.cookie
-    .split("; ")
-    .find((item) => item.startsWith("XSRF-TOKEN="));
-  return cookie ? decodeURIComponent(cookie.substring("XSRF-TOKEN=".length)) : "";
+const stompConfig = {
+  brokerURL: wsUrl,
+  reconnectDelay: 5000,
 };
 
 export function ChatPage() {
@@ -58,7 +57,7 @@ export function ChatPage() {
     if (!user || !servicoId) return;
     const client = new Client(stompConfig);
     client.beforeConnect = async () => {
-      client.connectHeaders = { "X-XSRF-TOKEN": readCsrfCookie() };
+      client.connectHeaders = { "X-XSRF-TOKEN": getCsrfToken() ?? "" };
     };
     stompClientRef.current = client;
 
