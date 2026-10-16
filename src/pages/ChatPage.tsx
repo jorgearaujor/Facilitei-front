@@ -19,15 +19,11 @@ interface ChatMessage {
   dataEnvio: string;
 }
 
-// Em producao a API fica em outra origem (Render); usamos a URL do WebSocket
-// definida por variavel de ambiente. Em desenvolvimento caimos na mesma origem
-// do navegador, que o proxy do Vite encaminha para a API local.
-const wsUrl =
-  (import.meta.env.VITE_WS_URL as string | undefined) ||
-  `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/buildrun-livechat-websocket`;
-
+// Mesma origem do navegador. No modo proxy (Vercel) o WebSocket nao e repassado
+// e o chat so volta a funcionar com dominio proprio; em desenvolvimento o proxy
+// do Vite encaminha para a API local.
 const stompConfig = {
-  brokerURL: wsUrl,
+  brokerURL: `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/buildrun-livechat-websocket`,
   reconnectDelay: 5000,
 };
 

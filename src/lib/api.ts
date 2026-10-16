@@ -1,13 +1,12 @@
 import axios from 'axios';
 
-// Em produção (front no Vercel + API no Render) a API fica em outra origem,
-// entao definimos a URL absoluta por variavel de ambiente. Em desenvolvimento
-// a variavel fica vazia e o proxy do Vite (ou o Nginx no Docker) encaminha /api.
-const apiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined) || '/api';
-
+// Sempre mesma origem: /api. Em producao o proxy do Vercel (vercel.json)
+// encaminha /api para a API no Render; em desenvolvimento o proxy do Vite
+// (ou o Nginx no Docker) encaminha para a API local. Manter relativo evita
+// cookies de terceiros e problemas de CORS.
 // Cria a instância do Axios
 export const api = axios.create({
-  baseURL: apiBaseUrl,
+  baseURL: '/api',
   withCredentials: true,
   withXSRFToken: true,
   headers: {
