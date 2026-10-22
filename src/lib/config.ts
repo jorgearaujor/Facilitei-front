@@ -1,7 +1,7 @@
 // URL base da API. Configure via VITE_API_BASE_URL (.env / painel de deploy).
-// Sem barra final. Fallback para a API publicada no Render.
+// Sem barra final. Fallback para a API publicada no Railway.
 export const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL ?? 'https://facilitei-api.onrender.com'
+  import.meta.env.VITE_API_BASE_URL ?? 'https://facilitei.velika.com.br'
 ).replace(/\/$/, '');
 
 // Deriva a URL do WebSocket (ws/wss) a partir da URL base da API.

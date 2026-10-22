@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Sempre mesma origem: /api. Em producao o proxy do Vercel (vercel.json)
-// encaminha /api para a API no Render; em desenvolvimento o proxy do Vite
+// encaminha /api para a API no Railway (https://facilitei.velika.com.br); em desenvolvimento o proxy do Vite
 // (ou o Nginx no Docker) encaminha para a API local. Manter relativo evita
 // cookies de terceiros e problemas de CORS.
 // Cria a instância do Axios
