@@ -1,8 +1,10 @@
 proxy_http_version 1.1;
 proxy_set_header Host $host;
-proxy_set_header X-Real-IP $remote_addr;
-proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-proxy_set_header X-Forwarded-Proto $scheme;
+# Sobrescreve (nao acrescenta) para que a API receba um unico IP, ja resolvido
+# pelo nginx a partir dos cabecalhos da borda; ver $client_ip no nginx.conf.template.
+proxy_set_header X-Real-IP $client_ip;
+proxy_set_header X-Forwarded-For $client_ip;
+proxy_set_header X-Forwarded-Proto $forwarded_proto;
 proxy_hide_header Server;
 proxy_hide_header X-Content-Type-Options;
 proxy_hide_header X-Frame-Options;

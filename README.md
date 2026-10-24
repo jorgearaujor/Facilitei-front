@@ -86,6 +86,23 @@ Serviços disponíveis:
   * Swagger da API: `http://localhost:8081/swagger-ui/index.html`
   * Caixa de e-mail local (Mailpit): `http://localhost:8025`
 
+### Deploy no Railway (produção)
+
+O front roda no mesmo projeto do Railway que a API, como um serviço Docker
+(`railway.json` + `Dockerfile`). O nginx serve o build do Vite e encaminha
+`/api`, o WebSocket do chat (`/buildrun-livechat-websocket`) e o Swagger
+(`/swagger-ui`, `/v3/api-docs`) para a API pela rede privada do Railway. Para o
+navegador tudo é mesma origem, então cookies de sessão/CSRF e o chat funcionam
+sem CORS.
+
+* Site e API: `https://facilitei.velika.com.br` (API em `/api`, Swagger em `/swagger-ui/index.html`)
+* Variáveis do serviço do front:
+  * `API_UPSTREAM=${{facilitei-api.RAILWAY_PRIVATE_DOMAIN}}:8080`
+  * `PORT` é injetada pelo Railway (padrão `8080`).
+
+O `nginx.conf.template` é processado com `envsubst` pelo entrypoint do nginx na
+subida do container.
+
 ### Configurar notificações push
 
 O sino do painel e as notificações internas funcionam para todos os usuários
