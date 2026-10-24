@@ -1,12 +1,42 @@
-limit_req_zone $binary_remote_addr zone=auth_limit:10m rate=10r/m;
-limit_req_zone $binary_remote_addr zone=registration_limit:10m rate=5r/m;
+# Template processado pelo entrypoint oficial do nginx (envsubst) na subida do
+# container. Somente ${VARIAVEIS} de ambiente sao substituidas; variaveis do
+# nginx ($host, $remote_addr...) ficam como estao.
+#   PORT          porta em que o nginx escuta (o Railway injeta; padrao 8080)
+#   API_UPSTREAM  host:porta da API (Railway: facilitei-api.railway.internal:8080;
+#                 Docker Compose: api-facilitei:8080)
+
+# IP real do cliente. Em producao o trafego chega por Cloudflare -> borda do
+# Railway -> nginx, entao $remote_addr e o IP da borda (igual para todos).
+# CF-Connecting-IP e definido pelo Cloudflare; X-Real-IP pela borda do Railway.
+map $http_x_real_ip $edge_client_ip {
+    ""      $remote_addr;
+    default $http_x_real_ip;
+}
+map $http_cf_connecting_ip $client_ip {
+    ""      $edge_client_ip;
+    default $http_cf_connecting_ip;
+}
+# O TLS termina na borda do Railway; repassa o protocolo original para a API.
+map $http_x_forwarded_proto $forwarded_proto {
+    ""      $scheme;
+    default $http_x_forwarded_proto;
+}
+
+limit_req_zone $client_ip zone=auth_limit:10m rate=10r/m;
+limit_req_zone $client_ip zone=registration_limit:10m rate=5r/m;
 
 server {
-    listen 8080;
+    listen ${PORT};
     server_name _;
     server_tokens off;
     # Margem para o envelope multipart de um arquivo de até 10 MB.
     client_max_body_size 11m;
+
+    # DNS do container (rede privada do Railway / Docker). Com proxy_pass por
+    # variavel o nome da API e resolvido a cada 10s, entao um redeploy da API
+    # (que pode trocar o IP interno) nao derruba o front.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+    set $api_upstream http://${API_UPSTREAM};
 
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
@@ -16,38 +46,50 @@ server {
 
     location = /api/auth/login {
         limit_req zone=auth_limit burst=5 nodelay;
-        proxy_pass http://api-facilitei:8080/api/auth/login;
+        proxy_pass $api_upstream;
         include /etc/nginx/proxy_params;
     }
 
     location = /api/clientes {
         limit_req zone=registration_limit burst=2 nodelay;
-        proxy_pass http://api-facilitei:8080/api/clientes;
+        proxy_pass $api_upstream;
         include /etc/nginx/proxy_params;
     }
 
     location = /api/trabalhadores {
         limit_req zone=registration_limit burst=2 nodelay;
-        proxy_pass http://api-facilitei:8080/api/trabalhadores;
+        proxy_pass $api_upstream;
         include /etc/nginx/proxy_params;
     }
 
     location /api/ {
-        proxy_pass http://api-facilitei:8080/api/;
+        proxy_pass $api_upstream;
         include /etc/nginx/proxy_params;
         proxy_connect_timeout 5s;
         proxy_read_timeout 30s;
         proxy_send_timeout 30s;
     }
 
+    # Documentacao da API (Swagger UI e OpenAPI).
+    location /swagger-ui {
+        proxy_pass $api_upstream;
+        include /etc/nginx/proxy_params;
+    }
+
+    location /v3/api-docs {
+        proxy_pass $api_upstream;
+        include /etc/nginx/proxy_params;
+    }
+
     location /buildrun-livechat-websocket {
-        proxy_pass http://api-facilitei:8080;
+        proxy_pass $api_upstream;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $client_ip;
+        proxy_set_header X-Forwarded-For $client_ip;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
         proxy_read_timeout 65s;
     }
 
